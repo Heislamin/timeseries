@@ -74,29 +74,46 @@ if view == "📅 2024 Forecast":
         st.plotly_chart(fig, use_container_width=True)
 
 # ========================================
-# 📊 ACTUAL VS PREDICTED (2024) - REGION-WISE FROM CSV
+# 📊 ACTUAL VS PREDICTED (2024) - REGION-WISE FROM METRICS
 # ========================================
 elif view == "📊 Actual vs Predicted (2024)":
     st.subheader("📊 Region-wise RMSE Comparison for All Models (2024)")
 
-    rmse_df_list = []
+    rmse_rows = []
     for model in MODELS:
         metric_file = f"{DATA_DIR}/{model}_model_metrics_2024.csv"
         if not os.path.exists(metric_file):
             continue
+
         try:
-            df = pd.read_csv(metric_file, index_col=0)
-            df.index = [model.upper()]
-            rmse_df_list.append(df)
-        except:
+            df = pd.read_csv(metric_file)
+
+            row = {"Model": model.upper()}
+            for _, row_data in df.iterrows():
+                region_name = str(row_data["region"]).strip().lower()
+                rmse = row_data["rmse_2024"]
+                if region_name in REGIONS:
+                    row[region_name] = rmse
+
+            rmse_rows.append(row)
+
+        except Exception as e:
+            st.warning(f"⚠️ Error reading {metric_file}: {e}")
             continue
 
-    if rmse_df_list:
-        full_rmse_df = pd.concat(rmse_df_list)
-        st.markdown("### 📋 RMSE Table (lower is better)")
-        st.dataframe(full_rmse_df.style.format("{:.3f}"))
+    if rmse_rows:
+        rmse_df = pd.DataFrame(rmse_rows).set_index("Model")
+
+        # Ensure all regions appear in proper order
+        for r in REGIONS:
+            if r not in rmse_df.columns:
+                rmse_df[r] = np.nan
+        rmse_df = rmse_df[REGIONS]
+
+        st.markdown("### 📋 Region-wise RMSE Table")
+        st.dataframe(rmse_df.style.format("{:.3f}"))
     else:
-        st.warning("⚠️ No RMSE metric files found for any models.")
+        st.warning("⚠️ No RMSE data found in metric files.")
 
 # ========================================
 # 🔮 2025 UNSEEN FORECAST VIEW
