@@ -31,12 +31,6 @@ region = st.sidebar.selectbox("Select Region", REGIONS)
 month_name = st.sidebar.selectbox("Select Month", list(MONTHS.keys()))
 month = MONTHS[month_name]
 
-# Debug
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 🧪 Debug Info")
-st.sidebar.write("📁 Files:", glob.glob(f"{DATA_DIR}/*_*.csv"))
-st.sidebar.write("📦 Models:", MODELS)
-
 # ========================================
 # 📅 2024 FORECAST VIEW
 # ========================================
@@ -47,7 +41,6 @@ if view == "📅 2024 Forecast":
 
     model = st.sidebar.selectbox("Select Model", MODELS, index=0)
     file_path = f"{DATA_DIR}/{model}_{region}_2024.csv"
-    st.markdown(f"#### 📂 File path: `{file_path}`")
 
     if not os.path.exists(file_path):
         st.error("❌ File does not exist.")
@@ -122,7 +115,6 @@ elif view == "📊 Actual vs Predicted (2024)":
 elif view == "🔮 2025 Unseen Forecast":
     model = st.sidebar.selectbox("Select Model", MODELS)
     file_path = f"{DATA_DIR}/{model}_{region}_2025.csv"
-    st.markdown(f"#### 📂 File path: `{file_path}`")
 
     if not os.path.exists(file_path):
         st.error("❌ File does not exist.")
@@ -137,3 +129,40 @@ elif view == "🔮 2025 Unseen Forecast":
 
     df["day"] = df["date"].dt.day
     df = df[df["date"].dt.month == int(month)]
+    days = sorted(df["day"].unique())
+    if not days:
+        st.warning("⚠️ No data found for this month.")
+        st.stop()
+
+    selected_day = st.sidebar.selectbox("Select Day", days)
+    day_df = df[df["day"] == selected_day]
+
+    st.subheader(f"{model.upper()} Forecast - {region.title()} on {month_name} {selected_day}, 2025")
+
+    if day_df.empty:
+        st.warning("⚠️ No data for this day.")
+    else:
+        fig = px.line(day_df, x="hour", y="predicted_temperature", title="Predicted Temperature (2025)")
+        st.plotly_chart(fig, use_container_width=True)
+
+    if st.button("📊 Compare Models"):
+        st.markdown("### 🔍 Model Comparison for Same Day")
+        for m in MODELS:
+            path = f"{DATA_DIR}/{m}_{region}_2025.csv"
+            if not os.path.exists(path):
+                continue
+
+            m_df = pd.read_csv(path)
+            try:
+                m_df["date"] = pd.to_datetime(m_df["date"])
+            except:
+                continue
+
+            m_df = m_df[(m_df["date"].dt.month == int(month)) & (m_df["date"].dt.day == selected_day)]
+            if m_df.empty:
+                continue
+
+            fig = px.line(m_df, x="hour", y="predicted_temperature", title=f"{m.upper()} Prediction")
+            st.plotly_chart(fig, use_container_width=True)
+
+        st.info("✅ No actuals in 2025, so comparison is between models only.")
