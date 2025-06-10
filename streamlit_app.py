@@ -8,9 +8,11 @@ import glob
 # --- CONFIGURATION ---
 DATA_DIR = "csvs_extracted/data"
 
+# Auto-detect all model names from any CSV in the folder
 def detect_models(data_dir):
-    files = glob.glob(f"{data_dir}/*_rakhiyal_2024.csv")
-    return sorted(list(set([os.path.basename(f).split("_")[0] for f in files])))
+    files = glob.glob(f"{data_dir}/*_*.csv")
+    models = [os.path.basename(f).split("_")[0] for f in files]
+    return sorted(list(set(models)))
 
 MODELS = detect_models(DATA_DIR)
 REGIONS = ["rakhiyal", "bopal", "ambawadi", "chandkheda", "vastral"]
@@ -24,7 +26,7 @@ st.set_page_config(page_title="Temperature Forecaster", layout="wide")
 st.title("🌡️ Time Series Temperature Analyzer")
 
 # --- MAIN MENU ---
-view = st.sidebar.radio("Select View", ["📅 2024 Forecast", "📊 Actual vs Predicted (2024)", "🔮 2025 Unseen Forecast"])
+view = st.sidebar.radio("Select View", ["📅 2024 Forecast"])
 
 # --- COMMON UI ---
 region = st.sidebar.selectbox("Select Region", REGIONS)
