@@ -74,10 +74,35 @@ if view == "📅 2024 Forecast":
         st.plotly_chart(fig, use_container_width=True)
 
 # ========================================
-# 📊 ACTUAL VS PREDICTED (2024) - REGION-WISE FROM METRICS
+# 📊 ACTUAL VS PREDICTED (2024) + RMSE TABLE
 # ========================================
 elif view == "📊 Actual vs Predicted (2024)":
-    st.subheader("📊 Region-wise RMSE Comparison for All Models (2024)")
+    st.subheader("📊 Actual vs Predicted Graph (2024)")
+    selected_day = st.sidebar.number_input("Select Day", min_value=1, max_value=31, value=10, step=1)
+
+    for model in MODELS:
+        file_path = f"{DATA_DIR}/{model}_{region}_2024.csv"
+        if not os.path.exists(file_path):
+            continue
+
+        try:
+            df = pd.read_csv(file_path)
+            df["date"] = pd.to_datetime(df["date"])
+            df = df[(df["date"].dt.month == int(month)) & (df["date"].dt.day == selected_day)]
+        except Exception as e:
+            st.warning(f"{model.upper()} failed to load: {e}")
+            continue
+
+        if df.empty or "actual_temperature" not in df.columns:
+            continue
+
+        st.markdown(f"### {model.upper()} - {region.title()} on {month_name} {selected_day}")
+        fig = px.line(df, x="hour", y="predicted_temperature", title="Predicted vs Actual")
+        fig.add_scatter(x=df["hour"], y=df["actual_temperature"], name="Actual", mode="lines")
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("---")
+    st.subheader("📋 Region-wise RMSE Table")
 
     rmse_rows = []
     for model in MODELS:
@@ -87,14 +112,11 @@ elif view == "📊 Actual vs Predicted (2024)":
 
         try:
             df = pd.read_csv(metric_file)
-
             row = {"Model": model.upper()}
             for _, row_data in df.iterrows():
-                region_name = str(row_data["region"]).strip().lower()
-                rmse = row_data["rmse_2024"]
+                region_name = row_data["region"].strip().lower()
                 if region_name in REGIONS:
-                    row[region_name] = rmse
-
+                    row[region_name] = row_data["rmse_2024"]
             rmse_rows.append(row)
 
         except Exception as e:
@@ -103,14 +125,10 @@ elif view == "📊 Actual vs Predicted (2024)":
 
     if rmse_rows:
         rmse_df = pd.DataFrame(rmse_rows).set_index("Model")
-
-        # Ensure all regions appear in proper order
         for r in REGIONS:
             if r not in rmse_df.columns:
                 rmse_df[r] = np.nan
         rmse_df = rmse_df[REGIONS]
-
-        st.markdown("### 📋 Region-wise RMSE Table")
         st.dataframe(rmse_df.style.format("{:.3f}"))
     else:
         st.warning("⚠️ No RMSE data found in metric files.")
