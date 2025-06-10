@@ -1,6 +1,0 @@
-region,mse_2024,rmse_2024,r2_2024,best_params
-Rakhiyal,4.744744756207368,2.1782435025054863,0.8645578166044439,"{'changepoint_prior_scale': 0.001, 'seasonality_prior_scale': 0.01, 'seasonality_mode': 'multiplicative'}"
-Bopal,4.778382484978411,2.18595116253278,0.8669629037492024,"{'changepoint_prior_scale': 0.001, 'seasonality_prior_scale': 0.01, 'seasonality_mode': 'multiplicative'}"
-Ambawadi,4.778382484978411,2.18595116253278,0.8669629037492024,"{'changepoint_prior_scale': 0.001, 'seasonality_prior_scale': 0.01, 'seasonality_mode': 'multiplicative'}"
-Chandkheda,4.90946206011885,2.2157305928561914,0.8644329394341651,"{'changepoint_prior_scale': 0.001, 'seasonality_prior_scale': 0.01, 'seasonality_mode': 'multiplicative'}"
-Vastral,4.859683749147833,2.2044690401880978,0.8615885354854872,"{'changepoint_prior_scale': 0.001, 'seasonality_prior_scale': 0.01, 'seasonality_mode': 'multiplicative'}"
