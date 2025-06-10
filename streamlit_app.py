@@ -74,40 +74,29 @@ if view == "📅 2024 Forecast":
         st.plotly_chart(fig, use_container_width=True)
 
 # ========================================
-# 📊 ACTUAL VS PREDICTED VIEW
+# 📊 ACTUAL VS PREDICTED (2024) - REGION-WISE FROM CSV
 # ========================================
 elif view == "📊 Actual vs Predicted (2024)":
-    selected_day = st.sidebar.number_input("Select Day", min_value=1, max_value=31, step=1, value=10)
-    st.subheader(f"📊 Actual vs Predicted - {region.title()} on {month_name} {selected_day}, 2024")
+    st.subheader("📊 Region-wise RMSE Comparison for All Models (2024)")
 
-    rmse_table = []
-
+    rmse_df_list = []
     for model in MODELS:
-        path = f"{DATA_DIR}/{model}_{region}_2024.csv"
-        if not os.path.exists(path):
+        metric_file = f"{DATA_DIR}/{model}_model_metrics_2024.csv"
+        if not os.path.exists(metric_file):
             continue
-
-        df = pd.read_csv(path)
         try:
-            df["date"] = pd.to_datetime(df["date"])
+            df = pd.read_csv(metric_file, index_col=0)
+            df.index = [model.upper()]
+            rmse_df_list.append(df)
         except:
             continue
 
-        df = df[(df["date"].dt.month == int(month)) & (df["date"].dt.day == selected_day)]
-
-        if df.empty or "actual_temperature" not in df.columns:
-            continue
-
-        fig = px.line(df, x="hour", y="predicted_temperature", title=f"{model.upper()}")
-        fig.add_scatter(x=df["hour"], y=df["actual_temperature"], name="Actual", mode="lines")
-        st.plotly_chart(fig, use_container_width=True)
-
-        rmse = np.sqrt(np.mean((df["actual_temperature"] - df["predicted_temperature"]) ** 2))
-        rmse_table.append((model.upper(), round(rmse, 3)))
-
-    if rmse_table:
-        st.markdown("### 📋 RMSE Table")
-        st.dataframe(pd.DataFrame(rmse_table, columns=["Model", "RMSE (°C)"]))
+    if rmse_df_list:
+        full_rmse_df = pd.concat(rmse_df_list)
+        st.markdown("### 📋 RMSE Table (lower is better)")
+        st.dataframe(full_rmse_df.style.format("{:.3f}"))
+    else:
+        st.warning("⚠️ No RMSE metric files found for any models.")
 
 # ========================================
 # 🔮 2025 UNSEEN FORECAST VIEW
