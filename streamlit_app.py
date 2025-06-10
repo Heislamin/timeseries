@@ -4,11 +4,11 @@ import plotly.express as px
 import os
 import numpy as np
 
-# ----------------------- CONFIG ------------------------
-DATA_DIR = "csvs_extracted/data"
-MODELS = ["holtwinters"]  # You can extend this
+# --- CONFIGURATION ---
+DATA_DIR = "csvs_extracted/data"  # <- Updated path
+MODELS = ["holtwinters"]  # Add more like 'lstm', 'prophet' if needed
 REGIONS = ["rakhiyal", "bopal", "ambawadi", "chandkheda", "vastral"]
-MONTH_MAP = {
+MONTHS = {
     "January": "01", "February": "02", "March": "03", "April": "04",
     "May": "05", "June": "06", "July": "07", "August": "08",
     "September": "09", "October": "10", "November": "11", "December": "12"
